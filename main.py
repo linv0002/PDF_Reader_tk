@@ -11,12 +11,20 @@ class PDFReader(tk.Tk):
 
         self.zoom_factor = 1.0
         self.canvas_zoom_factor = 0.5  # Default 50% of display size
+        self.rotate_angle = 0
         self.justification = "center"  # Default justification
         self._drag_data = {"x": 0, "y": 0, "dragging": False}
 
         # Frame for the zoom controls
         self.zoom_control_frame = ttk.Frame(self)
         self.zoom_control_frame.pack(side=tk.BOTTOM, fill=tk.X)
+
+        # Rotation controls
+        self.btn_rotate_left = tk.Button(self.zoom_control_frame, text="⟲", command=self.rotate_left)
+        self.btn_rotate_left.pack(side=tk.LEFT, padx=5)
+
+        self.btn_rotate_right = tk.Button(self.zoom_control_frame, text="⟳", command=self.rotate_right)
+        self.btn_rotate_right.pack(side=tk.LEFT, padx=5)
 
         # Navigation buttons on the left
         self.nav_control_frame = ttk.Frame(self.zoom_control_frame)
@@ -144,7 +152,7 @@ class PDFReader(tk.Tk):
         self.show_page(0)
 
     def render_page(self, page):
-        zoom_matrix = fitz.Matrix(self.zoom_factor, self.zoom_factor)
+        zoom_matrix = fitz.Matrix(self.zoom_factor, self.zoom_factor).prerotate(self.rotate_angle)
         pix = page.get_pixmap(matrix=zoom_matrix)
         img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
         return ImageTk.PhotoImage(img)
@@ -223,6 +231,14 @@ class PDFReader(tk.Tk):
     def update_zoom_entry(self):
         self.zoom_entry.delete(0, tk.END)
         self.zoom_entry.insert(0, f"{int(self.zoom_factor * 100)}%")
+
+    def rotate_left(self):
+        self.rotate_angle = (self.rotate_angle - 90) % 360
+        self.show_page(self.current_page)
+
+    def rotate_right(self):
+        self.rotate_angle = (self.rotate_angle + 90) % 360
+        self.show_page(self.current_page)
 
     def next_page(self):
         if self.pdf_file and self.current_page < len(self.pages) - 1:
