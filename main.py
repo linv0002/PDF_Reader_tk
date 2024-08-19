@@ -55,6 +55,14 @@ class PDFReader(tk.Tk):
         self.justification_options.pack(side=tk.LEFT, padx=5)
         self.justification_options.bind("<<ComboboxSelected>>", self.update_justification)
 
+        self.btn_extract_text_page = tk.Button(self.zoom_control_frame, text="Extract Text (Page)",
+                                               command=self.extract_text_from_current_page)
+        self.btn_extract_text_page.pack(side=tk.LEFT, padx=5)
+
+        self.btn_extract_text_pdf = tk.Button(self.zoom_control_frame, text="Extract Text (PDF)",
+                                              command=self.extract_text_from_pdf)
+        self.btn_extract_text_pdf.pack(side=tk.LEFT, padx=5)
+
         # Zoom controls on the right
         self.zoom_controls_frame = ttk.Frame(self.zoom_control_frame)
         self.zoom_controls_frame.pack(side=tk.RIGHT)
@@ -263,6 +271,26 @@ class PDFReader(tk.Tk):
     def on_ctrl_click(self, event):
         if not self._drag_data["dragging"]:
             self.previous_page()
+
+    def extract_text_from_current_page(self):
+        if self.pdf_file and self.current_page < len(self.pages):
+            page = self.pages[self.current_page]
+            text = page.get_text()
+            self.clipboard_clear()  # Clear the clipboard
+            self.clipboard_append(text)  # Append text to the clipboard
+            self.update()  # Now the clipboard contains the text
+            print("Text from current page copied to clipboard.")  # Confirmation message
+
+    def extract_text_from_pdf(self):
+        if self.pdf_file:
+            full_text = ""
+            for page in self.pages:
+                text = page.get_text()
+                full_text += text + "\n\n"  # Separate pages with double newlines
+            self.clipboard_clear()  # Clear the clipboard
+            self.clipboard_append(full_text)  # Append text to the clipboard
+            self.update()  # Now the clipboard contains the text
+            print("Text from entire PDF copied to clipboard.")  # Confirmation message
 
     def on_mouse_wheel(self, event):
         if event.state & 0x0004:  # Check if Ctrl is pressed
